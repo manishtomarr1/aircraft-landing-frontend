@@ -7,20 +7,34 @@ const FlyingAircraft = () => {
   const [isAirportBusy, setIsAirportBusy] = useState(false);
   const [airports, setAirports] = useState([]);
   const [message, setMessage] = useState("");
+  const [loadingAirports, setLoadingAirports] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Please wait, server is loading...");
 
   // Fetch all the airports
   useEffect(() => {
+    setLoadingAirports(true);
     const fetchAirports = async () => {
       try {
         const response = await axios.get(`${REACT_APP_API_BASE_URL}/airports`);
         setAirports(response.data);
+        setLoadingAirports(false);
       } catch (error) {
         console.error("Error fetching airports:", error.message);
+        setLoadingAirports(false);
       }
     };
 
     fetchAirports();
+
+    const messageTimeout = setTimeout(() => {
+      if (loadingAirports) {
+        setLoadingMessage("Server loading is taking longer than expected, please be patient.");
+      }
+    }, 30000); // Change message after 30 seconds
+
+    return () => clearTimeout(messageTimeout);
   }, []);
+
 
   // Polling the status of the selected airport
   //when new airport is select this useeffect is run and take the update on every second from the backend
@@ -90,6 +104,11 @@ const FlyingAircraft = () => {
 
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">Select Airport to Land:</h2>
+        {loadingAirports && (
+        <p className="text-blue-500 mt-4 blink-text">
+          {loadingMessage}
+        </p>
+      )}
         <div className="items-center space-y-2">
           {airports.map((airport) => (
             <button
